@@ -1,11 +1,11 @@
 {
-  "name": "Gastos por tarjeta",
+  "name": "Gastos tarjeta",
   "short_name": "Gastos",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#e8edfb",
-  "theme_color": "#0f766e",
+  "background_color": "#ffffff",
+  "theme_color": "#1a73e8",
   "icons": [
     { "src": "icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
