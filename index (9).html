@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f766e">
+<title>Gastos por tarjeta</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{--bg:#eef2f3;--card:#fff;--fg:#10222b;--mute:#5d7078;--line:#d3dde1;--acc:#0f766e;--neg:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1a1f;--card:#16262d;--fg:#e6f0f2;--mute:#8ba3ab;--line:#264049;--acc:#2dd4bf;--neg:#fb923c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,sans-serif;padding-bottom:84px}
+main{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:26px;margin:6px 0 14px}
+h2{font-size:17px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px;font-weight:600}
+input[type=text],input[type=date],input[type=month],select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);font-size:16px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{font:inherit;cursor:pointer}
+.main{width:100%;margin-top:14px;padding:13px;border:0;border-radius:12px;background:var(--acc);color:var(--card);font-weight:700}
+.ghost{width:100%;margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--fg);font-weight:600}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line)}
+nav button{flex:1;padding:12px 2px 16px;border:0;background:transparent;color:var(--mute);font-size:12px;font-weight:600}
+nav button i{display:block;font-style:normal;font-size:20px}
+nav button.on{color:var(--acc)}
+.view{display:none}.view.on{display:block}
+.tot{font-size:28px;font-weight:800;margin:2px 0 0}
+.g{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.g:last-child{border-bottom:0}
+.g .i{flex:1;min-width:0}.g b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g small{color:var(--mute)}
+.x{border:0;background:transparent;color:var(--neg);font-size:18px}
+.empty,.note{color:var(--mute);font-size:14px;padding:6px 0}
+.empty{text-align:center;padding:12px}
+.bar{height:10px;border-radius:6px;background:var(--line);overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:var(--acc)}
+.bar i.over{background:var(--neg)}
+.neg{color:var(--neg);font-weight:700}
+</style>
+</head>
+<body>
+<main>
+<h1>Gastos por tarjeta</h1>
+
+<section class="view on" id="v-add">
+  <div class="card">
+    <h2>Añadir gasto</h2>
+    <label>Fecha</label><input type="date" id="a-f">
+    <label>Sitio</label><input type="text" id="a-s" placeholder="Ej. Mercadona">
+    <label>Precio (€)</label><input type="text" id="a-p" inputmode="decimal" placeholder="0,00">
+    <div class="row">
+      <div><label>Categoría</label><select id="a-c"></select></div>
+      <div><label>Tarjeta</label><select id="a-t"></select></div>
+    </div>
+    <label>Quién lo añade</label><input type="text" id="a-u" placeholder="Tu nombre">
+    <button class="main" id="a-ok">Guardar gasto</button>
+  </div>
+</section>
+
+<section class="view" id="v-list">
+  <div class="card">
+    <label style="margin-top:0">Mes</label><input type="month" id="l-m">
+    <div class="row">
+      <div><label>Tarjeta</label><select id="l-t"></select></div>
+      <div><label>Categoría</label><select id="l-c"></select></div>
+    </div>
+    <div class="tot" id="l-tot">0,00 €</div>
+    <div class="note" id="l-n"></div>
+  </div>
+  <div class="card" id="l-l"></div>
+</section>
+
+<section class="view" id="v-pres">
+  <div class="card">
+    <h2>Presupuesto del mes</h2>
+    <label style="margin-top:0">Mes</label><input type="month" id="p-m">
+  </div>
+  <div id="p-l"></div>
+</section>
+
+<section class="view" id="v-doc">
+  <div class="card">
+    <h2>Descargar documento</h2>
+    <div class="row">
+      <div><label>Desde</label><input type="date" id="d-1"></div>
+      <div><label>Hasta</label><input type="date" id="d-2"></div>
+    </div>
+    <div class="note" id="d-n"></div>
+    <button class="main" id="d-ok">Descargar PDF</button>
+  </div>
+  <div class="card" id="m-card" style="display:none">
+    <h2>Gastos guardados en este móvil</h2>
+    <p class="note">He encontrado gastos de la versión anterior de esta app. Súbelos para compartirlos con los demás.</p>
+    <button class="main" id="m-ok">Subir gastos de este móvil</button>
+  </div>
+  <div class="card">
+    <h2>Copia de seguridad</h2>
+    <p class="note">Los gastos y presupuestos se guardan en Firebase y los ven todos los que tengan el enlace. Puedes descargar una copia por si acaso.</p>
+    <button class="ghost" id="b-exp">Descargar copia</button>
+    <button class="ghost" id="b-imp">Restaurar desde una copia</button>
+    <input type="file" id="b-file" accept="application/json" hidden>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button data-v="add" class="on"><i>➕</i>Añadir</button>
+  <button data-v="list"><i>📅</i>Gastos</button>
+  <button data-v="pres"><i>🎯</i>Presupuesto</button>
+  <button data-v="doc"><i>📄</i>Documento</button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js")});</script>
+<script type="module">
+import { firebaseConfig } from "./firebase-config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, deleteDoc, setDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+var $=function(s){return document.querySelector(s)};
+var TARJETAS=["Affinity Card","El Corte Inglés","ING"],CATS=["Comida","Gasolina","Ropa","Otros"];
+var eur=function(n){return new Intl.NumberFormat("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2}).format(n)+" €"};
+var fd=function(d){var p=d.split("-");return p[2]+"/"+p[1]+"/"+p[0]};
+var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
+var num=function(v){return parseFloat(String(v).replace(",","."))||0};
+var hoy=function(){return new Date().toLocaleDateString("sv-SE")};
+var opts=function(a,todas){return (todas?'<option value="">'+todas+'</option>':"")+a.map(function(x){return '<option>'+esc(x)+'</option>'}).join("")};
+
+/* Firebase: gastos y presupuestos compartidos */
+if(firebaseConfig.apiKey.indexOf("PEGA")===0){document.body.insertAdjacentHTML("afterbegin",'<div class="card" style="margin:16px;color:var(--neg)">Falta configurar Firebase: edita firebase-config.js</div>');throw new Error("Firebase sin configurar")}
+var fdb=getFirestore(initializeApp(firebaseConfig));
+var G=[],pres={};
+var all=function(){return Promise.resolve(G.slice())};
+var getP=function(m,t){return (pres[m]&&pres[m][t])||0};
+var add=function(g){g.creado=serverTimestamp();return addDoc(collection(fdb,"gastos"),g)};
+var del=function(id){return deleteDoc(doc(fdb,"gastos",id))};
+var setP=function(m,t,v){return setDoc(doc(fdb,"presupuestos",m+"_"+t.replace(/\s+/g,"-")),{mes:m,tarjeta:t,importe:v})};
+function refrescar(){
+  var v=document.querySelector(".view.on").id,a=document.activeElement;
+  if(v==="v-list")pintar();
+  else if(v==="v-pres"&&!(a&&a.dataset&&a.dataset.t!==undefined))pintarPres();
+  else if(v==="v-doc")resumenDoc();
+}
+onSnapshot(collection(fdb,"gastos"),function(sn){G=sn.docs.map(function(d){var x=d.data();x.id=d.id;return x});refrescar()});
+onSnapshot(collection(fdb,"presupuestos"),function(sn){pres={};sn.docs.forEach(function(d){var x=d.data();pres[x.mes]=pres[x.mes]||{};pres[x.mes][x.tarjeta]=x.importe});refrescar()});
+
+function dl(blob,name){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},5000)}
+
+/* Pestañas */
+document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){
+  document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x===b)});
+  document.querySelectorAll(".view").forEach(function(v){v.classList.toggle("on",v.id==="v-"+b.dataset.v)});
+  if(b.dataset.v==="list")pintar();if(b.dataset.v==="pres")pintarPres();if(b.dataset.v==="doc")resumenDoc();
+}});
+
+/* Añadir */
+$("#a-ok").onclick=async function(){
+  var s=$("#a-s").value.trim(),p=num($("#a-p").value),f=$("#a-f").value;
+  if(!f||!s||!p){alert("Rellena fecha, sitio y precio.");return}
+  var u=$("#a-u").value.trim();try{localStorage.setItem("gastos3-persona",u)}catch(e){}
+  await add({fecha:f,sitio:s,precio:p,cat:$("#a-c").value,tarjeta:$("#a-t").value,persona:u});
+  $("#a-s").value="";$("#a-p").value="";alert("Gasto guardado");
+};
+
+/* Gastos por mes, con filtros */
+async function pintar(){
+  var m=$("#l-m").value,t=$("#l-t").value,c=$("#l-c").value;
+  var L=(await all()).filter(function(g){return g.fecha.slice(0,7)===m&&(!t||g.tarjeta===t)&&(!c||g.cat===c)});
+  L.sort(function(a,b){return a.fecha<b.fecha?1:-1});
+  var tot=L.reduce(function(a,g){return a+g.precio},0);
+  $("#l-tot").textContent=eur(tot);
+  var n=L.length+(L.length===1?" gasto":" gastos");
+  if(t&&getP(m,t)){var q=getP(m,t)-tot;n+=" · Presupuesto "+eur(getP(m,t))+(c?"":(q>=0?" · quedan "+eur(q):" · te pasas "+eur(-q)))}
+  $("#l-n").textContent=n;
+  $("#l-l").innerHTML=L.length?L.map(function(g){
+    return '<div class="g"><div class="i"><b>'+esc(g.sitio)+'</b><small>'+fd(g.fecha)+' · '+esc(g.cat)+' · '+esc(g.tarjeta)+(g.persona?' · '+esc(g.persona):'')+'</small></div><b style="flex:none">'+eur(g.precio)+'</b><button class="x" data-del="'+g.id+'">🗑</button></div>';
+  }).join(""):'<div class="empty">No hay gastos con estos filtros.</div>';
+}
+$("#l-m").onchange=$("#l-t").onchange=$("#l-c").onchange=pintar;
+$("#l-l").onclick=async function(e){
+  var t=e.target;
+  if(t.dataset.del&&confirm("¿Eliminar este gasto?")){await del(t.dataset.del)}
+};
+
+/* Presupuesto por mes y tarjeta */
+async function pintarPres(){
+  var m=$("#p-m").value,L=(await all()).filter(function(g){return g.fecha.slice(0,7)===m});
+  $("#p-l").innerHTML=TARJETAS.map(function(t,i){
+    var gas=L.filter(function(g){return g.tarjeta===t}).reduce(function(a,g){return a+g.precio},0),p=getP(m,t);
+    var info=p?(gas<=p?"Quedan "+eur(p-gas):'<span class="neg">Te pasas '+eur(gas-p)+'</span>'):"Sin presupuesto";
+    return '<div class="card"><h2>'+esc(t)+'</h2><label style="margin-top:0">Presupuesto (€)</label>'+
+      '<input type="text" inputmode="decimal" data-t="'+i+'" value="'+(p?String(p).replace(".",","):"")+'" placeholder="0,00">'+
+      '<div class="bar"><i class="'+(p&&gas>p?"over":"")+'" style="width:'+(p?Math.min(100,gas/p*100):0)+'%"></i></div>'+
+      '<div class="note">Gastado '+eur(gas)+' · '+info+'</div></div>';
+  }).join("");
+}
+$("#p-m").onchange=pintarPres;
+$("#p-l").onchange=function(e){
+  var i=e.target.dataset.t;if(i===undefined)return;
+  setP($("#p-m").value,TARJETAS[+i],num(e.target.value));
+};
+
+/* Documento PDF */
+async function rango(){
+  var d=$("#d-1").value,h=$("#d-2").value;
+  if(!d||!h||d>h)return null;
+  var L=(await all()).filter(function(g){return g.fecha>=d&&g.fecha<=h});
+  L.sort(function(a,b){return a.fecha>b.fecha?1:-1});
+  return {d:d,h:h,L:L};
+}
+async function resumenDoc(){
+  var r=await rango();
+  $("#d-n").textContent=r?r.L.length+" gastos · total "+eur(r.L.reduce(function(a,g){return a+g.precio},0)):"Elige las fechas.";
+}
+$("#d-1").onchange=$("#d-2").onchange=resumenDoc;
+$("#d-ok").onclick=async function(){
+  if(!window.jspdf){alert("No se pudo cargar el generador de PDF. Comprueba tu conexión.");return}
+  var r=await rango();
+  if(!r){alert("Elige bien las fechas (desde / hasta).");return}
+  if(!r.L.length){alert("No hay gastos en esas fechas.");return}
+  var doc=new window.jspdf.jsPDF(),y=20,E=function(n){return eur(n).replace("€","EUR")};
+  doc.setFontSize(16);doc.text("Registro de gastos",14,y);y+=7;
+  doc.setFontSize(10);doc.text("Del "+fd(r.d)+" al "+fd(r.h),14,y);y+=10;
+  doc.setFont("helvetica","bold");doc.text("Fecha",14,y);doc.text("Sitio",34,y);doc.text("Categoría",80,y);doc.text("Tarjeta",104,y);doc.text("Persona",140,y);doc.text("Importe",196,y,{align:"right"});
+  doc.line(14,y+2,196,y+2);y+=8;doc.setFont("helvetica","normal");
+  var tot=0;
+  r.L.forEach(function(g){
+    if(y>280){doc.addPage();y=20}
+    doc.text(fd(g.fecha),14,y);doc.text(doc.splitTextToSize(g.sitio,43)[0],34,y);
+    doc.text(g.cat,80,y);doc.text(g.tarjeta,104,y);doc.text(doc.splitTextToSize(g.persona||"-",32)[0],140,y);doc.text(E(g.precio),196,y,{align:"right"});
+    tot+=g.precio;y+=7;
+  });
+  doc.line(14,y-3,196,y-3);y+=4;doc.setFont("helvetica","bold");
+  doc.text("TOTAL ("+r.L.length+" gastos)",14,y);doc.text(E(tot),196,y,{align:"right"});
+  doc.save("gastos_"+r.d+"_a_"+r.h+".pdf");
+};
+
+/* Copia de seguridad */
+$("#b-exp").onclick=async function(){
+  var L=await all();L.forEach(function(g){delete g.id;delete g.creado});
+  dl(new Blob([JSON.stringify({g:L,p:pres})],{type:"application/json"}),"copia_gastos_tarjetas_"+hoy()+".json");
+};
+$("#b-imp").onclick=function(){$("#b-file").click()};
+$("#b-file").onchange=async function(){
+  var f=this.files[0];if(!f)return;
+  try{
+    var d=JSON.parse(await f.text()),L=d.g||[];
+    if(!confirm("Se añadirán "+L.length+" gastos a los que ya tienes. ¿Continuar?"))return;
+    for(var i=0;i<L.length;i++)await add(L[i]);
+    var P=d.p||{};
+    for(var m in P)for(var t in P[m])if(P[m][t])await setP(m,t,P[m][t]);
+    alert("Copia restaurada");
+  }catch(e){alert("El archivo no es una copia válida.")}
+  this.value="";
+};
+
+/* Migrar lo guardado antes en este móvil */
+var oldG=[],oldP={};try{oldP=JSON.parse(localStorage.getItem("gastos2-pres")||"{}")}catch(e){}
+function oldDB(){return new Promise(function(res){
+  var r=indexedDB.open("gastos2-db");
+  r.onupgradeneeded=function(){r.transaction.abort()};
+  r.onerror=function(){res([])};
+  r.onsuccess=function(){var db=r.result;if(!db.objectStoreNames.contains("g")){db.close();res([]);return}
+    var q=db.transaction("g").objectStore("g").getAll();q.onsuccess=function(){db.close();res(q.result)};q.onerror=function(){res([])}};
+})}
+try{if(!localStorage.getItem("gastos3-migrado"))oldDB().then(function(L){oldG=L;if(L.length||Object.keys(oldP).length)$("#m-card").style.display=""})}catch(e){}
+$("#m-ok").onclick=async function(){
+  if(!confirm("Se subirán "+oldG.length+" gastos y tus presupuestos para que los vean todos. ¿Continuar?"))return;
+  this.disabled=true;
+  for(var i=0;i<oldG.length;i++){var g=oldG[i];delete g.id;await add(g)}
+  for(var m in oldP)for(var t in oldP[m])if(oldP[m][t])await setP(m,t,oldP[m][t]);
+  try{localStorage.setItem("gastos3-migrado","1")}catch(e){}
+  $("#m-card").style.display="none";alert("Listo: ya están compartidos.");
+};
+
+/* Inicio */
+$("#a-c").innerHTML=opts(CATS);$("#a-t").innerHTML=opts(TARJETAS);
+$("#l-t").innerHTML=opts(TARJETAS,"Todas las tarjetas");$("#l-c").innerHTML=opts(CATS,"Todas las categorías");
+$("#a-f").value=hoy();try{$("#a-u").value=localStorage.getItem("gastos3-persona")||""}catch(e){}
+$("#l-m").value=$("#p-m").value=hoy().slice(0,7);
+$("#d-1").value=hoy().slice(0,7)+"-01";$("#d-2").value=hoy();
+</script>
+</body>
+</html>
