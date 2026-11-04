@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#0f766e">
 <title>Gastos por tarjeta</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icon-192.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icono-192.png">
+<link rel="apple-touch-icon" href="icono-192.png">
 <style>
 :root{--bg:#eef2f3;--card:#fff;--fg:#10222b;--mute:#5d7078;--line:#d3dde1;--acc:#0f766e;--neg:#c2410c}
 @media (prefers-color-scheme:dark){:root{--bg:#0e1a1f;--card:#16262d;--fg:#e6f0f2;--mute:#8ba3ab;--line:#264049;--acc:#2dd4bf;--neg:#fb923c}}
@@ -283,5 +283,6 @@ $("#a-f").value=hoy();try{$("#a-u").value=localStorage.getItem("gastos3-persona"
 $("#l-m").value=$("#p-m").value=hoy().slice(0,7);
 $("#d-1").value=hoy().slice(0,7)+"-01";$("#d-2").value=hoy();
 </script>
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}
 </body>
 </html>
